@@ -28,3 +28,13 @@ Then open http://localhost:3000 in a browser.
 - More levels with different study habits.
 - Sound, art, accessibility settings, and a progress history.
 - A short challenge entry PDF and four-minute demo script.
+
+## Playground Arcade real AI copy
+
+The attached Playground Arcade files are in `Playground-Arcade`. To run its real OpenAI Study Quest locally, use:
+
+```text
+node playground-server.js
+```
+
+Then open http://localhost:3001/study.html.
