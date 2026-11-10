@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Study, Play, Fun!</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="brand-row"><div><p class="eyebrow">A tiny study adventure</p><h1>Study, Play, Fun!</h1></div><div class="sparkle" aria-hidden="true">✦</div></header>
+      <section id="start-screen" class="screen card"><div class="hero-icon" aria-hidden="true">💡</div><h2>Catch your best ideas.</h2><p>Move the catcher, collect bright ideas, and unlock a quick AI study coach.</p><button id="start-button" class="primary-button">Start level</button><p class="safety-note">Safety reminder: don’t share private information. AI can be wrong about medical topics.</p></section>
+      <section id="game-screen" class="screen hidden" aria-live="polite"><div class="hud"><span>Ideas <strong id="score">0</strong></span><span>Lives <strong id="lives">3</strong></span><span>Time <strong id="time">60</strong></span></div><div id="game-board" class="game-board" aria-label="Idea catching game"><div class="board-label">Catch the ideas!</div><div id="player" class="player">✦</div></div><p class="controls-hint">Use ← → or A/D. On a phone, tap or drag left and right.</p></section>
+      <section id="coach-screen" class="screen card hidden"><div class="hero-icon" aria-hidden="true">🧠</div><p class="eyebrow">Level checkpoint</p><h2>Nice work! Ask your AI Coach.</h2><p>Ask one school-related question about a test, study goal, or brainstorming idea.</p><label class="sr-only" for="coach-input">Your educational question</label><textarea id="coach-input" rows="3" maxlength="240" placeholder="Example: Help me make a 10-minute science study goal."></textarea><button id="ask-button" class="primary-button">Ask AI Coach</button><p id="coach-status" class="coach-status" role="status"></p><p class="safety-note">Please keep private information out of your question.</p></section>
+      <section id="game-over-screen" class="screen card hidden"><div class="hero-icon" aria-hidden="true">🌱</div><p class="eyebrow">Level complete</p><h2 id="game-over-title">You grew your idea garden!</h2><p id="game-over-message">Your AI Coach tip is ready to try.</p><div class="final-score">Ideas caught <strong id="final-score">0</strong></div><button id="play-again-button" class="primary-button">Play again</button></section>
+    </main>
+    <script src="game.js"></script>
+  </body>
+</html>
