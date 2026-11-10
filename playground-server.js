@@ -24,7 +24,7 @@ async function askAI(question) {
   const key = readEnv();
   if (!key || key === 'paste-your-key-here') throw new Error('missing-key');
   const payload = { model: readModel(), max_completion_tokens: 120, messages: [
-    { role: 'system', content: `${readBrief()}\n\nAnswer briefly. Only help with educational studying or brainstorming. Never request or repeat private information.` },
+    { role: 'system', content: `${readBrief()}\n\nGive personalized feedback based on the student's exact subject, idea, or goal. Refer to the specific details they shared, then give one doable next step and one short encouragement. Keep it brief and useful. Only help with educational studying or brainstorming. Never request or repeat private information.` },
     { role: 'user', content: question },
   ] };
   const response = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(payload) });

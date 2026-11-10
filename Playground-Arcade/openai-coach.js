@@ -18,8 +18,8 @@
     notesButton.disabled = true;
     adviceButton.disabled = true;
     const request = kind === 'notes'
-      ? `Turn this educational idea into one short, useful sticky note with a clear title:\n${question}`
-      : `Give one short, useful study or brainstorming tip for this educational goal:\n${question}`;
+      ? `Turn this exact educational idea into one sticky note. Use the subject and details I gave you, add one specific next step, and make the note useful for me:\n${question}`
+      : `Give personalized feedback for this exact educational goal. Mention the subject or idea I gave you, then give one specific next step and one encouraging sentence:\n${question}`;
     try {
       const response = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: request }) });
       const data = await response.json();
