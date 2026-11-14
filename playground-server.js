@@ -53,6 +53,7 @@ const server = http.createServer((req, res) => {
   if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return reply(res, 404, 'Not found', 'text/plain; charset=utf-8');
   let content = fs.readFileSync(file);
   if (path.basename(file) === 'study.html') content = Buffer.from(content.toString('utf8').replace('</body>', '<script src="openai-coach.js"></script></body>'));
+  if (path.basename(file) === 'coin-pusher.html') content = Buffer.from(content.toString('utf8').replace('</body>', '<script src="coin-pusher-upgrade.js"></script></body>'));
   reply(res, 200, content, MIME[path.extname(file)] || 'application/octet-stream');
 });
 
