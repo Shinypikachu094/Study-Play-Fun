@@ -40,7 +40,7 @@ const server = http.createServer((req, res) => {
     req.on('end', async () => {
       try {
         const question = JSON.parse(body).question?.trim();
-        if (!question || question.length > 500) return reply(res, 400, JSON.stringify({ error: 'Please ask a short question.' }));
+        if (!question || question.length > 9000) return reply(res, 400, JSON.stringify({ error: 'That conversation is too long. Start a new chat in this browser.' }));
         reply(res, 200, JSON.stringify({ answer: await askAI(question) }));
       } catch (error) { reply(res, 502, JSON.stringify({ error: 'coach-unavailable' })); }
     });

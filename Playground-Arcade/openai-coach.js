@@ -76,13 +76,18 @@
     try {
       const response = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: request }) });
       const data = await response.json();
-      if (!response.ok) throw new Error('coach unavailable');
+      if (!response.ok) {
+        const problem = data.error || 'The Coach could not answer.';
+        throw new Error(problem);
+      }
       addMessage('coach', data.answer);
       renderChat();
     } catch (error) {
       conversation.pop();
       saveConversation();
-      thinking.textContent = 'The Coach server is offline. Start Playground Arcade and keep its window open, then refresh this page.';
+      thinking.textContent = error.message === 'Failed to fetch'
+        ? 'The Coach server is offline. Start Playground Arcade and keep its window open, then refresh this page.'
+        : error.message;
     } finally {
       busy = false;
       prompt.disabled = false;
