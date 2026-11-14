@@ -38,3 +38,5 @@ node playground-server.js
 ```
 
 Then open http://localhost:3001/study.html.
+
+You can also double-click `start-playground.bat`. Keep its window open while using the AI Coach.

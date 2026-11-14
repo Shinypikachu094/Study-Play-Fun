@@ -82,7 +82,7 @@
     } catch (error) {
       conversation.pop();
       saveConversation();
-      thinking.textContent = 'I couldn’t reach OpenAI. Check that the Playground server is running, your key is valid, and you have internet.';
+      thinking.textContent = 'The Coach server is offline. Start Playground Arcade and keep its window open, then refresh this page.';
     } finally {
       busy = false;
       prompt.disabled = false;
