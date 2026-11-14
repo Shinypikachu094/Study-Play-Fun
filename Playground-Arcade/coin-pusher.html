@@ -5,7 +5,7 @@
 </style></head><body><header><div class="wrap nav"><a href="index.html" onclick="if(window.opener){window.close();return false}">← Arcade Game</a><span class="coins">🪙 <b id="coins">0</b> coins</span></div></header>
 <main class="wrap"><div class="layout"><section><div class="panel"><div class="sub">Coin Pusher</div><h1>Coin<br>Pusher</h1><p class="sub">Drop a coin, bounce it through the bumpers, and push the pile toward the prize tray.</p><canvas id="game" width="700" height="470"></canvas><button class="button" id="drop">Drop 1 saved coin</button><a class="back" href="study.html">← Back to Study Quest</a></div></section><aside class="panel side"><h2>Study data</h2><div class="stat"><span>Title</span><strong id="quest">My Study Quest</strong></div><div class="stat"><span>Notes</span><strong id="note-count">0 chars</strong></div><div class="stat"><span>Completed</span><strong id="done">0</strong></div><div class="stat"><span>Coin return</span><strong>1 coin returned</strong></div><div class="tip">Each drop uses one saved coin. Coins that reach the prize box return one coin. Notes and progress are saved on this device.</div><button class="button" id="refresh">Refresh quest data</button></aside></div></main>
 <script src="shared.js?v=20261003"></script><script>
-const c=document.getElementById('game'),ctx=c.getContext('2d'),coinEl=document.getElementById('coins'),drop=document.getElementById('drop'),quest=document.getElementById('quest'),noteCount=document.getElementById('note-count'),done=document.getElementById('done'),safeBg=()=>{try{return typeof arcadeCanvasBackground==='function'?arcadeCanvasBackground():'#25295c'}catch{return '#25295c'}},safeStudy=()=>typeof studyGet==='function'?studyGet():{title:'My Study Quest',notes:'',tasks:[]};let coins=[],last=0,raf=0,pusher=0,toast=0;
+const c=document.getElementById('game'),ctx=c.getContext('2d'),coinEl=document.getElementById('coins'),drop=document.getElementById('drop'),quest=document.getElementById('quest'),noteCount=document.getElementById('note-count'),done=document.getElementById('done'),safeBg=()=>{try{return typeof arcadeCanvasBackground==='function'?arcadeCanvasBackground():'#25295c'}catch{return '#25295c'}},safeStudy=()=>typeof studyGet==='function'?studyGet():{title:'My Study Quest',notes:'',tasks:[]};var coins=[],last=0,raf=0,pusher=0,toast=0;
 const COIN_PUSHER_SAVE='coinPusherBoardV1';
 function saveBoard(){try{localStorage.setItem(COIN_PUSHER_SAVE,JSON.stringify(coins))}catch{}}
 function loadBoard(){try{const saved=JSON.parse(localStorage.getItem(COIN_PUSHER_SAVE)||'null');if(Array.isArray(saved)){coins=saved;return}}catch{}pile()}
@@ -20,6 +20,8 @@ function draw(){ctx.fillStyle=safeBg();ctx.fillRect(0,0,700,470);ctx.fillStyle='
 function loop(now){const dt=Math.min(.03,(now-last)/1000||0);last=now;update(dt);draw();sync();raf=requestAnimationFrame(loop)}
 drop.onclick=addCoin;document.getElementById('refresh').onclick=sync;window.addEventListener('resize',resize);window.addEventListener('beforeunload',saveBoard);resize();loadBoard();draw();sync();setInterval(saveBoard,1000);raf=requestAnimationFrame(loop);
 (function(){const key='coinPusherStarterGrantV1';if(!localStorage.getItem(key)){if(typeof arcadeAddCoins==='function')arcadeAddCoins(1000,'starterGrant');localStorage.setItem(key,'1')}})();</script></body></html>
+
+
 
 
 
