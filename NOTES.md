@@ -37,6 +37,6 @@ The attached Playground Arcade files are in `Playground-Arcade`. To run its real
 node playground-server.js
 ```
 
-Then open http://localhost:3001/study.html.
+Then open http://localhost:3002/study.html.
 
 You can also double-click `start-playground.bat`. Keep its window open while using the AI Coach.
