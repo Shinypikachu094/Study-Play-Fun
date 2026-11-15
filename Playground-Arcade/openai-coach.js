@@ -127,7 +127,7 @@
     return `${safety}${breathing}\n\n(AI interpretations are not always accurate and cannot replace emergency professionals or a doctor.)`;
   }
   function cleanCoachAnswer(answer) {
-    const cleaned = String(answer || '').replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+    const cleaned = String(answer || '').replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/(You mentioned:[\s\S]*?)\s+Student:\s+.*$/i, '$1').replace(/\s{2,}/g, ' ').trim();
     if (!cleaned) return 'I’m focusing on the specific details in your message and will respond to those directly.';
     if (/^You mentioned:[\s\S]*$/i.test(cleaned) && !/\n\n/.test(cleaned)) return `${cleaned}\n\nI’m focusing on the specific details you gave me instead of asking you to choose a topic.`;
     return cleaned;

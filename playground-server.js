@@ -20,7 +20,7 @@ function readModel() {
 function readBrief() { return fs.readFileSync(path.join(__dirname, 'BRIEF.md'), 'utf8'); }
 function reply(res, status, body, type = 'application/json; charset=utf-8') { res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body); }
 function latestStudentMessage(question) {
-  const matches = [...question.matchAll(/Student:\s*([\s\S]*?)(?=\nCoach:|$)/g)];
+  const matches = [...question.matchAll(/(?:^|\n)Student:\s*([\s\S]*?)(?=\n(?:Coach|Student):|$)/g)];
   return (matches.length ? matches[matches.length - 1][1] : question).trim();
 }
 function emergencySafetyMessage(latest) {
