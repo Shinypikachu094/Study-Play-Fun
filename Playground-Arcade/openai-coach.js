@@ -22,7 +22,7 @@
   const historyText = () => conversation.slice(-16).map((message) => `${message.role === 'student' ? 'Student' : 'Coach'}: ${message.content}`).join('\n');
 
   if (label) label.textContent = 'Real OpenAI coach';
-  if (copy) copy.textContent = 'Ask anything about schoolwork, studying, or brainstorming. The saved chat stays on this device; do not include private information.';
+  if (copy) copy.textContent = 'Ask anything about schoolwork, studying, or brainstorming. Replies stay in chat unless you explicitly ask to make one a study note.';
   const actions = notesButton.closest('.ai-actions');
   if (actions) actions.style.display = 'none';
   reply.style.display = 'none';
@@ -32,7 +32,7 @@
   chat.style.cssText = 'display:flex;flex-direction:column;gap:10px;max-height:280px;overflow:auto;margin:16px 0 12px;padding:4px 2px;';
   const privacyNote = document.createElement('p');
   privacyNote.className = 'small';
-  privacyNote.textContent = 'Saved on this device for Coach context. Do not type private information.';
+  privacyNote.textContent = 'Saved on this device for Coach context. Say “make that a study note” when you want to save a reply. Do not type private information.';
   prompt.placeholder = 'Ask anything';
   prompt.rows = 3;
   prompt.maxLength = 5000;
@@ -67,7 +67,8 @@
     if (!safeText) return;
     busy = true;
     addMessage('student', safeText);
-    const asksForNote = /\b(make|create|write|save|add)\b.{0,45}\b(note|sticky|memo)\b/i.test(safeText);
+    const noteCommand = /\b(make|create|write|save|add|turn|convert)\b[\s\S]{0,100}\b(note|notes|nite|sticky\s+note|memo)\b/i;
+    const asksForNote = noteCommand.test(safeText);
     const instruction = asksForNote
       ? 'The student is asking for a study note. Directly create the note and answer the request. Include every named detail exactly, use a short title and clear note body, and do not only say that it was saved. Do not shorten or remove requested details.'
       : 'Respond with personalized but open-ended feedback. Mention the student’s subject or idea, then offer a broad hint, idea starter, or guiding question and brief encouragement. Do not give exact steps, a detailed plan, a finished answer, or do the assignment.';
