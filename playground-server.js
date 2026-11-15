@@ -24,9 +24,15 @@ function latestStudentMessage(question) {
   return (matches.length ? matches[matches.length - 1][1] : question).trim();
 }
 function emergencySafetyMessage(latest) {
-  if (!/(severe\s+chest\s+pain|chest\s+pain[\s\S]{0,50}(trouble|difficulty|problem)\s+breath|trouble\s+breath|difficulty\s+breath|can't\s+breath|cannot\s+breath|shortness\s+of\s+breath)/i.test(latest)) return '';
+  const breathingEmergency = /(severe\s+chest\s+pain|chest\s+pain[\s\S]{0,50}(trouble|difficulty|problem)\s+breath|trouble\s+breath|difficulty\s+breath|can't\s+breath|cannot\s+breath|shortness\s+of\s+breath)/i.test(latest);
+  const dangerEmergency = /(hostage|kidnap|kidnapped|abduct|abduction|taken\s+against\s+(?:my|their)\s+will|arms?\s+and\s+legs?\s+(?:are|were)?\s*(?:all\s+)?broken|both\s+arms?\s+broken|both\s+legs?\s+broken)/i.test(latest);
+  if (!breathingEmergency && !dangerEmergency) return '';
   const detail = latest.replace(/\s+/g, ' ').slice(0, 140);
-  return `You mentioned: ${detail}\n\nCall 911 (or your local emergency number) now, and tell a trusted adult immediately. Severe chest pain or trouble breathing can be an emergency, so do not wait for an AI response or try to handle it alone.\n\nWhile help is coming:\n- Sit in a comfortable position, stay as still as you can, and avoid exertion.\n- Ask someone to stay with you and unlock the door if it is safe.\n- Do not drive yourself. Follow the dispatcher's instructions and stay on the call until they tell you to hang up.\n- If the person becomes unresponsive or is not breathing normally, tell the dispatcher immediately and follow their CPR/AED instructions.\n\n(AI interpretations are not always accurate and cannot replace a doctor or emergency professional.)`;
+  const safety = /hostage|kidnap|abduct|taken\s+against/i.test(latest)
+    ? 'Call 911 (or your local emergency number) now if you can do so safely, and tell a trusted adult or emergency dispatcher exactly where you are. Do not confront the person holding you or make a risky move to reach a phone. Stay as calm and quiet as you can, follow immediate safety instructions, and share your location or send a quiet alert only if it is safe.'
+    : 'Call 911 (or your local emergency number) now, and tell a trusted adult immediately. Do not move the injured person unless there is immediate danger. Keep broken limbs in the position you found them, do not straighten bones, and use a clean cloth for bleeding while following the dispatcher’s instructions.';
+  const breathing = breathingEmergency ? '\n\nFor breathing trouble or severe chest pain: sit in a comfortable position, avoid exertion, ask someone to stay nearby, and do not drive yourself. If the person becomes unresponsive or is not breathing normally, tell the dispatcher and follow CPR/AED instructions.' : '';
+  return `You mentioned: ${detail}\n\n${safety}${breathing}\n\n(AI interpretations are not always accurate and cannot replace emergency professionals or a doctor.)`;
 }
 
 async function askAI(question) {
