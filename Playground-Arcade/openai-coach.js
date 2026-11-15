@@ -35,6 +35,7 @@
   privacyNote.textContent = 'Saved on this device for Coach context. Do not type private information.';
   prompt.placeholder = 'Ask anything';
   prompt.rows = 3;
+  prompt.maxLength = 5000;
   prompt.style.cssText = 'width:100%;min-height:110px;margin:0;border:2px solid #dfe3f4;border-radius:24px;padding:18px 20px;font-size:17px;background:#fff;color:#182044;resize:vertical;outline:none;';
   panel.appendChild(chat);
   panel.appendChild(prompt);

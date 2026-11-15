@@ -19,28 +19,35 @@ function readModel() {
 }
 function readBrief() { return fs.readFileSync(path.join(__dirname, 'BRIEF.md'), 'utf8'); }
 function reply(res, status, body, type = 'application/json; charset=utf-8') { res.writeHead(status, { 'Content-Type': type }); res.end(body); }
+function latestStudentMessage(question) {
+  const matches = [...question.matchAll(/Student:\s*([\s\S]*?)(?=\nCoach:|$)/g)];
+  return (matches.length ? matches[matches.length - 1][1] : question).trim();
+}
 
 async function askAI(question) {
   const key = readEnv();
   if (!key || key === 'paste-your-key-here') throw new Error('missing-key');
+  const latest = latestStudentMessage(question);
   const payload = { model: readModel(), max_completion_tokens: 120, messages: [
-    { role: 'system', content: `${readBrief()}\n\nGive personalized feedback based on the student's exact subject, idea, or goal. Never give a generic tip: mention at least one real detail from the student's latest message. If important context is missing, ask one short clarifying question before giving advice. For normal study help, offer a broad hint, idea starter, or guiding question instead of doing the assignment. If the student specifically asks you to create or save a note, preserve every detail they requested and do not tell them to use fewer words unless they ask. Keep it useful and do not invent missing details. Only help with educational studying or brainstorming. Never request or repeat private information.` },
-    { role: 'user', content: question },
+    { role: 'system', content: `${readBrief()}\n\nUnderstand natural student messages even when they are long, informal, misspelled, emotional, or combine several thoughts. Identify the student's educational goal, subject, requested format, and important details before answering. Start by naming one concrete detail from the latest student message, so the student can tell the answer is meant for them. Never give a generic tip. If important context is missing, ask one short clarifying question before giving advice. For normal study help, offer a broad hint, idea starter, or guiding question instead of doing the assignment. If the student specifically asks you to create or save a note, preserve every detail they requested and do not tell them to use fewer words unless they ask. Keep it useful and do not invent missing details. For off-topic requests, briefly redirect to schoolwork; for unsafe or medical requests, give a brief safety warning and suggest a trusted adult or qualified professional. Never request or repeat private information.` },
+    { role: 'user', content: `Latest student message to personalize to:\n${latest}\n\nFull conversation:\n${question}` },
   ] };
   const response = await fetch('https://api.openai.com/v1/chat/completions', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` }, body: JSON.stringify(payload) });
   if (!response.ok) throw new Error(`api-${response.status}`);
   const data = await response.json();
-  return data.choices?.[0]?.message?.content?.trim() || 'Try turning your idea into one small next step.';
+  const answer = data.choices?.[0]?.message?.content?.trim();
+  const detail = latest.replace(/\s+/g, ' ').slice(0, 140);
+  return answer ? `You mentioned: ${detail}\n\n${answer}` : `You mentioned: ${detail}\n\nWhat part of that topic would you like to explore first?`;
 }
 
 const server = http.createServer((req, res) => {
   if (req.method === 'POST' && req.url === '/api/coach') {
     let body = '';
-    req.on('data', (chunk) => { body += chunk; if (body.length > 10000) req.destroy(); });
+    req.on('data', (chunk) => { body += chunk; if (body.length > 50000) req.destroy(); });
     req.on('end', async () => {
       try {
         const question = JSON.parse(body).question?.trim();
-        if (!question || question.length > 9000) return reply(res, 400, JSON.stringify({ error: 'That conversation is too long. Start a new chat in this browser.' }));
+        if (!question || question.length > 40000) return reply(res, 400, JSON.stringify({ error: 'That conversation is too long. Start a new chat in this browser.' }));
         reply(res, 200, JSON.stringify({ answer: await askAI(question) }));
       } catch (error) { reply(res, 502, JSON.stringify({ error: 'coach-unavailable' })); }
     });
