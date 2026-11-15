@@ -52,7 +52,7 @@ async function askAI(question) {
   const data = await response.json();
   const answer = data.choices?.[0]?.message?.content?.trim();
   const detail = latest.replace(/\s+/g, ' ').slice(0, 140);
-  const cleanedAnswer = answer?.replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+  const cleanedAnswer = answer?.replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s*I[’']m focusing on the specific details you gave me instead of asking you to choose a topic\.?\s*/gi, ' ').replace(/\s+Student:\s+[^\n]*(?=\n|$)/gi, ' ').replace(/\s{2,}/g, ' ').trim();
   return `You mentioned: ${detail}\n\n${cleanedAnswer || 'I’m focusing on the specific details in your message and will respond to those directly.'}`;
 }
 
