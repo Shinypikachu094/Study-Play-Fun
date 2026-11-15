@@ -35,3 +35,5 @@ function studyGet(){try{const s=JSON.parse(localStorage.getItem(STUDY_KEY))||{};
 function studySave(s){localStorage.setItem(STUDY_KEY,JSON.stringify(s));return s}
 function studyCompleteTask(id){const s=studyGet(),task=s.tasks.find(t=>t.id===id);if(task&&!task.done){task.done=true;studySave(s);arcadeAddCoins(3,'activity');arcadeAddPoints(5,'studyActivity');arcadeAddXP(25,'studyActivity')}return s}
 
+document.addEventListener('DOMContentLoaded',()=>{if(document.querySelector('.arcade-xp-hud'))return;const hud=document.createElement('div');hud.className='arcade-xp-hud';hud.style.cssText='position:fixed;top:12px;right:12px;z-index:9999;padding:9px 13px;border:1px solid #ffffff55;border-radius:999px;background:#111827dd;color:#fff;font:800 13px system-ui,sans-serif;box-shadow:0 6px 18px #0002;backdrop-filter:blur(7px)';function render(){const s=arcadeState();hud.textContent=`⭐ Level ${s.level} · ${s.xp} XP · ${s.points} points`}document.body.appendChild(hud);render();setInterval(render,500)});
+
