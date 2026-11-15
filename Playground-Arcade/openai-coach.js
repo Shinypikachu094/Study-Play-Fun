@@ -69,7 +69,7 @@
     addMessage('student', safeText);
     const asksForNote = /\b(make|create|write|save|add)\b.{0,45}\b(note|sticky|memo)\b/i.test(safeText);
     const instruction = asksForNote
-      ? 'The student is asking for a specific saved note. Preserve every detail they requested, do not shorten it, and confirm that it will be saved. Do not add details they did not request.'
+      ? 'The student is asking for a study note. Directly create the note and answer the request. Include every named detail exactly, use a short title and clear note body, and do not only say that it was saved. Do not shorten or remove requested details.'
       : 'Respond with personalized but open-ended feedback. Mention the student’s subject or idea, then offer a broad hint, idea starter, or guiding question and brief encouragement. Do not give exact steps, a detailed plan, a finished answer, or do the assignment.';
     const request = `${instruction}\n\nConversation so far:\n${historyText()}`;
     const thinking = document.createElement('div');
@@ -88,7 +88,7 @@
       addMessage('coach', data.answer);
       renderChat();
       if (asksForNote && typeof brain !== 'undefined') {
-        brain.notes.push({ id: Date.now(), title: 'Requested note', text: safeText, tag: 'Ideas', updated: Date.now() });
+        brain.notes.push({ id: Date.now(), title: 'AI study note', text: data.answer, tag: 'School', updated: Date.now() });
         saveBrain();
         renderBrain();
         const saved = document.createElement('div');
