@@ -94,6 +94,14 @@
   renderChat();
 
   let busy = false;
+  function saveCoachNote(noteText) {
+    if (typeof brain === 'undefined') return;
+    brain.notes.push({ id: Date.now(), title: 'AI study note', text: noteText, tag: 'School', updated: Date.now() });
+    saveBrain();
+    renderBrain();
+    arcadeAddXP(15, 'coachNote');
+    renderProgress();
+  }
   function urgentSafetyReply(text) {
     if (!/(severe\s+chest\s+pain|chest\s+pain[\s\S]{0,50}(trouble|difficulty|problem)\s+breath|trouble\s+breath|difficulty\s+breath|can't\s+breath|cannot\s+breath|shortness\s+of\s+breath)/i.test(text)) return '';
     return 'Call 911 (or your local emergency number) now, and tell a trusted adult immediately. Severe chest pain or trouble breathing can be an emergency, so do not wait for an AI response or try to handle it alone.\n\nWhile help is coming:\n- Sit in a comfortable position, stay as still as you can, and avoid exertion.\n- Ask someone to stay with you and unlock the door if it is safe.\n- Do not drive yourself. Follow the dispatcher’s instructions and stay on the call until they tell you to hang up.\n- If the person becomes unresponsive or is not breathing normally, tell the dispatcher immediately and follow their CPR/AED instructions.\n\n(AI interpretations are not always accurate and cannot replace a doctor or emergency professional.)';
@@ -103,11 +111,13 @@
     const safeText = redactPrivate(studentText.trim());
     if (!safeText) return;
     busy = true;
+    const previousCoach = [...conversation].reverse().find((message) => message.role === 'coach');
     addMessage('student', safeText);
     const noteCommand = /\b(make|create|write|save|add|turn|convert)\b[\s\S]{0,100}\b(note|notes|nite|sticky\s+note|memo)\b/i;
     const asksForNote = noteCommand.test(safeText);
+    const turnsPreviousReplyIntoNote = asksForNote && /\b(that|this|it|above|previous|last)\b/i.test(safeText) && previousCoach;
     const instruction = asksForNote
-      ? 'The student is asking for a study note. Directly create the note and answer the request. Include every named detail exactly, use a short title and clear note body, and do not only say that it was saved. Do not shorten or remove requested details.'
+      ? 'The student is asking for a study note. Directly create the note and answer the request. Include every named detail exactly, use a short title and clear note body, and do not only say that it was saved. Do not ask what part of the topic the student wants to explore, and do not shorten or remove requested details.'
       : 'Respond with personalized but open-ended feedback. Mention the student’s subject or idea, then offer a broad hint, idea starter, or guiding question and brief encouragement. Do not give exact steps, a detailed plan, a finished answer, or do the assignment.';
     const request = `${instruction}\n\nConversation so far:\n${historyText()}`;
     const thinking = document.createElement('div');
@@ -123,6 +133,18 @@
         renderChat();
         return;
       }
+      if (turnsPreviousReplyIntoNote) {
+        const noteText = `Study note\n\n${previousCoach.content}`;
+        addMessage('coach', noteText);
+        saveCoachNote(noteText);
+        renderChat();
+        const saved = document.createElement('div');
+        saved.style.cssText = 'align-self:flex-start;padding:10px 14px;border-radius:16px;background:#fff8d8;color:#725b1a;';
+        saved.textContent = 'Saved the previous Coach response as a study note.';
+        chat.appendChild(saved);
+        chat.scrollTop = chat.scrollHeight;
+        return;
+      }
       const response = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: request }) });
       const data = await response.json();
       if (!response.ok) {
@@ -132,11 +154,7 @@
       addMessage('coach', data.answer);
       renderChat();
       if (asksForNote && typeof brain !== 'undefined') {
-        brain.notes.push({ id: Date.now(), title: 'AI study note', text: data.answer, tag: 'School', updated: Date.now() });
-        saveBrain();
-        renderBrain();
-        arcadeAddXP(15, 'coachNote');
-        renderProgress();
+        saveCoachNote(data.answer);
         const saved = document.createElement('div');
         saved.style.cssText = 'align-self:flex-start;padding:10px 14px;border-radius:16px;background:#fff8d8;color:#725b1a;';
         saved.textContent = 'Saved as a sticky note with your requested details.';
