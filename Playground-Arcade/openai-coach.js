@@ -18,6 +18,18 @@
   try { conversation = JSON.parse(localStorage.getItem(CHAT_KEY) || '[]'); } catch { conversation = []; }
   if (!Array.isArray(conversation)) conversation = [];
   const saveConversation = () => localStorage.setItem(CHAT_KEY, JSON.stringify(conversation));
+  let cleanedSavedHistory = false;
+  conversation = conversation.map((message) => {
+    if (message.role !== 'coach') return message;
+    const cleaned = String(message.content || '').replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+    if (cleaned !== message.content) cleanedSavedHistory = true;
+    if (/^You mentioned:[\s\S]*$/i.test(cleaned) && !/\n\n/.test(cleaned)) {
+      cleanedSavedHistory = true;
+      return { ...message, content: `${cleaned}\n\nI’m focusing on the specific details you gave me instead of asking you to choose a topic.` };
+    }
+    return cleaned ? { ...message, content: cleaned } : { ...message, content: 'I’m focusing on the specific details you gave me instead of asking you to choose a topic.' };
+  });
+  if (cleanedSavedHistory) saveConversation();
   const addMessage = (role, content) => { conversation.push({ role, content: redactPrivate(content), at: Date.now() }); saveConversation(); };
   const historyText = () => conversation.slice(-16).map((message) => `${message.role === 'student' ? 'Student' : 'Coach'}: ${message.content}`).join('\n');
 
