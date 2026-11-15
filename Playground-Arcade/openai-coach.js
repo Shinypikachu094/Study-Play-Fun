@@ -23,12 +23,12 @@
     if (message.role !== 'coach') return message;
     const cleaned = String(message.content || '').replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s{2,}/g, ' ').trim();
     if (cleaned !== message.content) cleanedSavedHistory = true;
-    if (/^You mentioned:[\s\S]*$/i.test(cleaned) && !/\n\n/.test(cleaned)) {
+    if (/^You mentioned:[\s\S]*$/i.test(cleaned) && (!/\n\n/.test(cleaned) || /I’m focusing on the specific details you gave me/i.test(cleaned))) {
       cleanedSavedHistory = true;
-      return { ...message, content: `${cleaned}\n\nI’m focusing on the specific details you gave me instead of asking you to choose a topic.` };
+      return null;
     }
     return cleaned ? { ...message, content: cleaned } : { ...message, content: 'I’m focusing on the specific details you gave me instead of asking you to choose a topic.' };
-  });
+  }).filter(Boolean);
   if (cleanedSavedHistory) saveConversation();
   const addMessage = (role, content) => { conversation.push({ role, content: redactPrivate(content), at: Date.now() }); saveConversation(); };
   const historyText = () => conversation.slice(-16).map((message) => `${message.role === 'student' ? 'Student' : 'Coach'}: ${message.content}`).join('\n');
@@ -117,7 +117,9 @@
   function urgentSafetyReply(text) {
     const breathingEmergency = /(severe\s+chest\s+pain|chest\s+pain[\s\S]{0,50}(trouble|difficulty|problem)\s+breath|trouble\s+breath|difficulty\s+breath|can't\s+breath|cannot\s+breath|shortness\s+of\s+breath)/i.test(text);
     const dangerEmergency = /(hostage|kidnap|kidnapped|abduct|abduction|taken\s+against\s+(?:my|their)\s+will|arms?\s+and\s+legs?\s+(?:are|were)?\s*(?:all\s+)?broken|both\s+arms?\s+broken|both\s+legs?\s+broken)/i.test(text);
-    if (!breathingEmergency && !dangerEmergency) return '';
+    const lifeThreat = /about\s+to\s+die|going\s+to\s+die|i(?:'m|\s+am)\s+dying|kill\s+myself|hurt\s+myself|suicid/i.test(text);
+    if (!breathingEmergency && !dangerEmergency && !lifeThreat) return '';
+    if (lifeThreat && !dangerEmergency && !breathingEmergency) return 'Call 911 (or your local emergency number) now if you are in immediate danger, and tell a trusted adult right away. If you might hurt yourself, move away from anything you could use to hurt yourself and stay with another person. In the U.S. or Canada, call or text 988 for immediate crisis support; elsewhere, contact your local crisis line. (AI interpretations are not always accurate and cannot replace emergency professionals.)';
     const safety = /hostage|kidnap|abduct|taken\s+against/i.test(text)
       ? 'Call 911 (or your local emergency number) now if you can do so safely, and tell a trusted adult or emergency dispatcher exactly where you are. Do not confront the person holding you or make a risky move to reach a phone. Stay as calm and quiet as you can, follow immediate safety instructions, and share your location or send a quiet alert only if it is safe.'
       : 'Call 911 (or your local emergency number) now, and tell a trusted adult immediately. Do not move the injured person unless there is immediate danger. Keep broken limbs in the position you found them, do not straighten bones, and use a clean cloth for bleeding while following the dispatcher’s instructions.';
