@@ -18,7 +18,7 @@ function readModel() {
   return match ? match[0] : 'gpt-5.6-luna';
 }
 function readBrief() { return fs.readFileSync(path.join(__dirname, 'BRIEF.md'), 'utf8'); }
-function reply(res, status, body, type = 'application/json; charset=utf-8') { res.writeHead(status, { 'Content-Type': type }); res.end(body); }
+function reply(res, status, body, type = 'application/json; charset=utf-8') { res.writeHead(status, { 'Content-Type': type, 'Cache-Control': 'no-store' }); res.end(body); }
 function latestStudentMessage(question) {
   const matches = [...question.matchAll(/Student:\s*([\s\S]*?)(?=\nCoach:|$)/g)];
   return (matches.length ? matches[matches.length - 1][1] : question).trim();
@@ -75,7 +75,7 @@ const server = http.createServer((req, res) => {
   const file = path.resolve(ROOT, relative);
   if (!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()) return reply(res, 404, 'Not found', 'text/plain; charset=utf-8');
   let content = fs.readFileSync(file);
-  if (path.basename(file) === 'study.html') content = Buffer.from(content.toString('utf8').replace('</body>', '<script src="openai-coach.js"></script></body>'));
+  if (path.basename(file) === 'study.html') content = Buffer.from(content.toString('utf8').replace('</body>', '<script src="openai-coach.js?v=20261115-3"></script></body>'));
   if (path.basename(file) === 'coin-pusher.html') content = Buffer.from(content.toString('utf8').replace('</body>', '<script src="coin-pusher-upgrade.js"></script></body>'));
   reply(res, 200, content, MIME[path.extname(file)] || 'application/octet-stream');
 });
