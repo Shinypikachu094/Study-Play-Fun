@@ -61,6 +61,10 @@
   renderChat();
 
   let busy = false;
+  function urgentSafetyReply(text) {
+    if (!/(severe\s+chest\s+pain|chest\s+pain[\s\S]{0,50}(trouble|difficulty|problem)\s+breath|trouble\s+breath|difficulty\s+breath|can't\s+breath|cannot\s+breath|shortness\s+of\s+breath)/i.test(text)) return '';
+    return 'Call 911 (or your local emergency number) now, and tell a trusted adult immediately. Severe chest pain or trouble breathing can be an emergency, so do not wait for an AI response or try to handle it alone.\n\nWhile help is coming:\n- Sit in a comfortable position, stay as still as you can, and avoid exertion.\n- Ask someone to stay with you and unlock the door if it is safe.\n- Do not drive yourself. Follow the dispatcher’s instructions and stay on the call until they tell you to hang up.\n- If the person becomes unresponsive or is not breathing normally, tell the dispatcher immediately and follow their CPR/AED instructions.\n\n(AI interpretations are not always accurate and cannot replace a doctor or emergency professional.)';
+  }
   async function askCoach(studentText) {
     if (busy) return;
     const safeText = redactPrivate(studentText.trim());
@@ -80,6 +84,12 @@
     chat.scrollTop = chat.scrollHeight;
     prompt.disabled = true;
     try {
+      const urgentReply = urgentSafetyReply(safeText);
+      if (urgentReply) {
+        addMessage('coach', urgentReply);
+        renderChat();
+        return;
+      }
       const response = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: request }) });
       const data = await response.json();
       if (!response.ok) {
