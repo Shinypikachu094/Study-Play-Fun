@@ -50,7 +50,8 @@ async function askAI(question) {
   const data = await response.json();
   const answer = data.choices?.[0]?.message?.content?.trim();
   const detail = latest.replace(/\s+/g, ' ').slice(0, 140);
-  return answer ? `You mentioned: ${detail}\n\n${answer}` : `You mentioned: ${detail}\n\nWhat part of that topic would you like to explore first?`;
+  const cleanedAnswer = answer?.replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+  return `You mentioned: ${detail}\n\n${cleanedAnswer || 'I’m focusing on the specific details in your message and will respond to those directly.'}`;
 }
 
 const server = http.createServer((req, res) => {

@@ -112,6 +112,10 @@
     const breathing = breathingEmergency ? '\n\nFor breathing trouble or severe chest pain: sit in a comfortable position, avoid exertion, ask someone to stay nearby, and do not drive yourself. If the person becomes unresponsive or is not breathing normally, tell the dispatcher and follow CPR/AED instructions.' : '';
     return `${safety}${breathing}\n\n(AI interpretations are not always accurate and cannot replace emergency professionals or a doctor.)`;
   }
+  function cleanCoachAnswer(answer) {
+    const cleaned = String(answer || '').replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+    return cleaned || 'I’m focusing on the specific details in your message and will respond to those directly.';
+  }
   async function askCoach(studentText) {
     if (busy) return;
     const safeText = redactPrivate(studentText.trim());
@@ -163,10 +167,11 @@
         const problem = data.error || 'The Coach could not answer.';
         throw new Error(problem);
       }
-      addMessage('coach', data.answer);
+      const coachAnswer = cleanCoachAnswer(data.answer);
+      addMessage('coach', coachAnswer);
       renderChat();
       if (asksForNote && typeof brain !== 'undefined') {
-        saveCoachNote(data.answer);
+        saveCoachNote(coachAnswer);
         const saved = document.createElement('div');
         saved.style.cssText = 'align-self:flex-start;padding:10px 14px;border-radius:16px;background:#fff8d8;color:#725b1a;';
         saved.textContent = 'Saved as a sticky note with your requested details.';
