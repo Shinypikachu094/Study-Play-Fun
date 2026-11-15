@@ -29,14 +29,14 @@
 
   const chat = document.createElement('div');
   chat.className = 'coach-chat-history';
-  chat.style.cssText = 'display:flex;flex-direction:column;gap:10px;max-height:280px;overflow:auto;margin:16px 0 12px;padding:4px 2px;';
+  chat.style.cssText = 'display:flex;flex-direction:column;gap:12px;max-height:520px;min-height:180px;overflow:auto;margin:16px 0 12px;padding:8px 4px;';
   const privacyNote = document.createElement('p');
   privacyNote.className = 'small';
   privacyNote.textContent = 'Saved on this device for Coach context. Say “make that a study note” when you want to save a reply. Do not type private information.';
   prompt.placeholder = 'Ask anything';
   prompt.rows = 3;
-  prompt.maxLength = 5000;
-  prompt.style.cssText = 'width:100%;min-height:110px;margin:0;border:2px solid #dfe3f4;border-radius:24px;padding:18px 20px;font-size:17px;background:#fff;color:#182044;resize:vertical;outline:none;';
+  prompt.maxLength = 12000;
+  prompt.style.cssText = 'width:100%;min-height:220px;margin:0;border:2px solid #dfe3f4;border-radius:24px;padding:22px 24px;font-size:18px;line-height:1.5;background:#fff;color:#182044;resize:vertical;outline:none;';
   panel.appendChild(chat);
   panel.appendChild(prompt);
   panel.appendChild(privacyNote);
