@@ -13,12 +13,13 @@
 
   const heading = side.querySelector('h2');
   const metrics = document.createElement('div');
-  metrics.innerHTML = '<div class="stat"><span>Coins put in</span><strong id="put-in-count">0</strong></div><div class="stat"><span>Coins taken back</span><strong id="taken-back-count">0</strong></div><div class="stat"><span>Return ratio</span><strong id="return-ratio">0.0%</strong></div>';
+  metrics.innerHTML = '<div class="stat"><span>Coins put in</span><strong id="put-in-count">0</strong></div><div class="stat"><span>Coins taken back</span><strong id="taken-back-count">0</strong></div><div class="stat"><span>Return ratio</span><strong id="return-ratio">0.0%</strong></div><div class="stat"><span>Arcade Points</span><strong id="arcade-points-count">0</strong></div>';
   heading.insertAdjacentElement('afterend', metrics);
   const putIn = document.getElementById('put-in-count');
   const takenBack = document.getElementById('taken-back-count');
   const returnRatio = document.getElementById('return-ratio');
-  const refreshMetrics = () => { putIn.textContent = stats.putIn; takenBack.textContent = stats.takenBack; returnRatio.textContent = ratio(); };
+  const arcadePoints = document.getElementById('arcade-points-count');
+  const refreshMetrics = () => { putIn.textContent = stats.putIn; takenBack.textContent = stats.takenBack; returnRatio.textContent = ratio(); arcadePoints.textContent = typeof window.arcadeState === 'function' ? window.arcadeState().points : 0; };
   refreshMetrics();
 
   const oldDrop = drop.onclick;
@@ -34,7 +35,7 @@
   const oldAddCoins = window.arcadeAddCoins;
   if (typeof oldAddCoins === 'function') {
     window.arcadeAddCoins = (amount, source) => {
-      if (source === 'prize') { stats.takenBack += Number(amount) || 0; save(); refreshMetrics(); }
+      if (source === 'prize') { stats.takenBack += Number(amount) || 0; save(); if (typeof window.arcadeAddPoints === 'function') window.arcadeAddPoints(Number(amount) || 0, 'coinPusher'); refreshMetrics(); }
       return oldAddCoins(amount, source);
     };
   }
