@@ -8,7 +8,7 @@ function arcadeAddXP(amount,source){const s=arcadeState(),before=s.level;s.xp+=M
 function arcadeSave(s){localStorage.setItem(ARCADE_KEY,JSON.stringify(s));return s}
 function arcadeAddCoins(amount,source){const s=arcadeState();s.coins+=Math.max(0,Math.floor(amount));if(source)s[`${source}Coins`]=(s[`${source}Coins`]||0)+Math.floor(amount);arcadeSave(s);return s}
 function arcadeSpendCoins(amount,source){const s=arcadeState(),n=Math.max(0,Math.floor(amount));if(s.coins<n)return null;s.coins-=n;if(source)s[`${source}Spent`]=(s[`${source}Spent`]||0)+n;return arcadeSave(s)}
-function arcadeAddPoints(amount,source){const s=arcadeState();s.points+=Math.max(0,Math.floor(amount));if(source)s[`${source}Earned`]=(s[`${source}Earned`]||0)+Math.floor(amount);arcadeSave(s);return s}
+function arcadeAddPoints(amount,source){const s=arcadeState(),earned=Math.max(0,Math.floor(amount));s.points+=earned;s.xp+=earned;s.level=1+Math.floor(s.xp/100);if(source)s[`${source}Earned`]=(s[`${source}Earned`]||0)+earned;arcadeSave(s);return s}
 function arcadeRecordScore(game,score){const s=arcadeState();s.highScores[game]=Math.max(s.highScores[game]||0,Math.floor(score));arcadeSave(s);return s}
 function arcadeBuyTheme(theme){const s=arcadeState(),t=ARCADE_THEMES[theme];if(!t||s.items.includes(theme))return s;if(s.points<t.cost)return null;s.points-=t.cost;s.items.push(theme);s.theme=theme;return arcadeSave(s)}
 function arcadeUseTheme(theme){const s=arcadeState();if(s.items.includes(theme)){s.theme=theme;arcadeSave(s)}arcadeApplyTheme()}
