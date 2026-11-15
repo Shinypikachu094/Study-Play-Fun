@@ -26,6 +26,12 @@
   const actions = notesButton.closest('.ai-actions');
   if (actions) actions.style.display = 'none';
   reply.style.display = 'none';
+  const layout = panel.closest('.study-with-ai');
+  if (layout) {
+    layout.style.display = 'block';
+    panel.style.position = 'static';
+    panel.style.marginTop = '18px';
+  }
 
   const chat = document.createElement('div');
   chat.className = 'coach-chat-history';
