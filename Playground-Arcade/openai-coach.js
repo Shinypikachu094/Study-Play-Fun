@@ -32,6 +32,33 @@
     panel.style.position = 'static';
     panel.style.marginTop = '18px';
   }
+  const progressCard = document.createElement('section');
+  progressCard.className = 'card study-progress';
+  progressCard.style.cssText = 'margin:0 0 18px;padding:18px 22px;background:linear-gradient(135deg,#fff8d8,#eef0ff);';
+  progressCard.innerHTML = '<div style="display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap"><div><div class="eyebrow">Your progress</div><h2 style="margin:4px 0 2px">Level <span id="study-level">1</span> · <span id="study-level-name">Getting started</span></h2></div><div style="font-weight:900;color:#4d3b0c">⭐ <span id="study-points">0</span> points · ✨ <span id="study-xp">0</span> XP</div></div><div style="height:12px;background:#ffffffaa;border-radius:999px;overflow:hidden;margin-top:14px"><div id="study-xp-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#6d70ff,#ff6fa8);border-radius:999px;transition:width .25s"></div></div><p class="small" id="study-milestone" style="margin:9px 0 0">0 / 100 XP to the next level</p>';
+  if (layout && layout.parentNode) layout.parentNode.insertBefore(progressCard, layout);
+  const levelNames = ['Getting started', 'Curious learner', 'Study builder', 'Focused scholar', 'Knowledge champion'];
+  function renderProgress() {
+    if (typeof arcadeState !== 'function') return;
+    const state = arcadeState();
+    const level = state.level || 1;
+    const xpIntoLevel = state.xp % 100;
+    document.getElementById('study-level').textContent = level;
+    document.getElementById('study-level-name').textContent = levelNames[Math.min(level - 1, levelNames.length - 1)] || `Level ${level}`;
+    document.getElementById('study-points').textContent = state.points;
+    document.getElementById('study-xp').textContent = state.xp;
+    document.getElementById('study-xp-bar').style.width = `${xpIntoLevel}%`;
+    document.getElementById('study-milestone').textContent = `${xpIntoLevel} / 100 XP to Level ${level + 1} · Complete a task (+25 XP), add a task (+5 XP), or save a brainstorm idea (+10 XP).`;
+  }
+  renderProgress();
+  const addTask = document.getElementById('add');
+  const taskInput = document.getElementById('task-input');
+  if (addTask && taskInput) addTask.addEventListener('click', () => { if (taskInput.value.trim()) { arcadeAddXP(5, 'studyTask'); setTimeout(renderProgress, 0); } }, true);
+  const taskList = document.getElementById('tasks');
+  if (taskList) taskList.addEventListener('change', () => setTimeout(renderProgress, 0));
+  const addIdea = document.getElementById('add-idea');
+  const ideaText = document.getElementById('idea-text');
+  if (addIdea && ideaText) addIdea.addEventListener('click', () => { if (ideaText.value.trim()) { arcadeAddXP(10, 'brainstorm'); setTimeout(renderProgress, 0); } }, true);
 
   const chat = document.createElement('div');
   chat.className = 'coach-chat-history';
@@ -108,6 +135,8 @@
         brain.notes.push({ id: Date.now(), title: 'AI study note', text: data.answer, tag: 'School', updated: Date.now() });
         saveBrain();
         renderBrain();
+        arcadeAddXP(15, 'coachNote');
+        renderProgress();
         const saved = document.createElement('div');
         saved.style.cssText = 'align-self:flex-start;padding:10px 14px;border-radius:16px;background:#fff8d8;color:#725b1a;';
         saved.textContent = 'Saved as a sticky note with your requested details.';

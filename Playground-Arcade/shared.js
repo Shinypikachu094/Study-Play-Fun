@@ -33,5 +33,5 @@ document.addEventListener('DOMContentLoaded',arcadeApplyTheme);
 
 function studyGet(){try{const s=JSON.parse(localStorage.getItem(STUDY_KEY))||{};return {title:s.title||'My Study Quest',notes:s.notes||'',tasks:Array.isArray(s.tasks)?s.tasks:[]}}catch{return {title:'My Study Quest',notes:'',tasks:[]}}}
 function studySave(s){localStorage.setItem(STUDY_KEY,JSON.stringify(s));return s}
-function studyCompleteTask(id){const s=studyGet(),task=s.tasks.find(t=>t.id===id);if(task&&!task.done){task.done=true;studySave(s);arcadeAddCoins(3,'activity');arcadeAddPoints(5,'studyActivity')}return s}
+function studyCompleteTask(id){const s=studyGet(),task=s.tasks.find(t=>t.id===id);if(task&&!task.done){task.done=true;studySave(s);arcadeAddCoins(3,'activity');arcadeAddPoints(5,'studyActivity');arcadeAddXP(25,'studyActivity')}return s}
 
