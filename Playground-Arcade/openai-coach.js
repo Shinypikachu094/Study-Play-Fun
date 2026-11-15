@@ -111,11 +111,11 @@
     const safeText = redactPrivate(studentText.trim());
     if (!safeText) return;
     busy = true;
-    const previousCoach = [...conversation].reverse().find((message) => message.role === 'coach');
+    const previousCoach = [...conversation].reverse().find((message) => message.role === 'coach' && !/what part of that topic would you like to explore first/i.test(message.content));
     addMessage('student', safeText);
     const noteCommand = /\b(make|create|write|save|add|turn|convert)\b[\s\S]{0,100}\b(note|notes|nite|sticky\s+note|memo)\b/i;
     const asksForNote = noteCommand.test(safeText);
-    const turnsPreviousReplyIntoNote = asksForNote && /\b(that|this|it|above|previous|last)\b/i.test(safeText) && previousCoach;
+    const noteFollowUp = asksForNote && /\b(that|this|it|above|previous|last)\b/i.test(safeText);
     const instruction = asksForNote
       ? 'The student is asking for a study note. Directly create the note and answer the request. Include every named detail exactly, use a short title and clear note body, and do not only say that it was saved. Do not ask what part of the topic the student wants to explore, and do not shorten or remove requested details.'
       : 'Respond with personalized but open-ended feedback. Mention the student’s subject or idea, then offer a broad hint, idea starter, or guiding question and brief encouragement. Do not give exact steps, a detailed plan, a finished answer, or do the assignment.';
@@ -133,7 +133,7 @@
         renderChat();
         return;
       }
-      if (turnsPreviousReplyIntoNote) {
+      if (noteFollowUp && previousCoach) {
         const noteText = `Study note\n\n${previousCoach.content}`;
         addMessage('coach', noteText);
         saveCoachNote(noteText);
@@ -143,6 +143,12 @@
         saved.textContent = 'Saved the previous Coach response as a study note.';
         chat.appendChild(saved);
         chat.scrollTop = chat.scrollHeight;
+        return;
+      }
+      if (noteFollowUp) {
+        const noContext = 'I do not have a useful previous Coach answer to turn into a note yet. Ask your question again, then say “make that a study note.”';
+        addMessage('coach', noContext);
+        renderChat();
         return;
       }
       const response = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: request }) });
