@@ -42,3 +42,11 @@ Then open http://localhost:3002/study.html.
 You can also double-click `start-playground.bat`. Keep its window open while using the AI Coach.
 
 After each save point, push it to GitHub.
+
+## Vercel online setup
+
+Vercel serves the Arcade files without a build step. The `vercel.json` rewrites the site root to the Arcade homepage and keeps the game files in `Playground-Arcade`.
+
+The online Study Quest Coach uses the small Vercel function in `api/coach.js`. In Vercel Project Settings → Environment Variables, add `OPENAI_API_KEY` for Production (and Preview if desired). No other Vercel setting is required. Never upload `.env` or paste the key into code.
+
+The local `node playground-server.js` helper still works on this computer and continues reading the local `.env` file.

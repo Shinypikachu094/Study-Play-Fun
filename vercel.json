@@ -1,0 +1,7 @@
+{
+  "rewrites": [
+    { "source": "/study.html", "destination": "/api/study" },
+    { "source": "/", "destination": "/Playground-Arcade/index%20(1).html" },
+    { "source": "/:path*", "destination": "/Playground-Arcade/:path*" }
+  ]
+}
