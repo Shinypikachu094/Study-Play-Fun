@@ -78,6 +78,38 @@
   const addIdea = document.getElementById('add-idea');
   const ideaText = document.getElementById('idea-text');
   if (addIdea && ideaText) addIdea.addEventListener('click', () => { if (ideaText.value.trim()) { arcadeAddXP(10, 'brainstorm'); setTimeout(renderProgress, 0); } }, true);
+  function refreshStudyTasks() {
+    if (typeof render === 'function') render();
+    renderProgress();
+  }
+  function studyTaskCommand(text) {
+    if (typeof studyGet !== 'function' || typeof studySave !== 'function') return '';
+    const addMatch = text.match(/\b(?:add|create|make|put)\b[\s\S]{0,80}\b(?:task|to[- ]?do|checklist item|list|things? to complete)\b[\s\S]*?(?:says?|called|named|:)[\s:：-]*(.+)$/i);
+    if (addMatch) {
+      const taskText = addMatch[1].replace(/[.!?]+$/, '').trim();
+      if (!taskText) return 'Tell me what you want the new task to say.';
+      const state = studyGet();
+      const exists = state.tasks.some((task) => task.text.toLowerCase() === taskText.toLowerCase() && !task.done);
+      if (!exists) {
+        state.tasks.push({ id: Date.now(), text: taskText, done: false });
+        studySave(state);
+        arcadeAddXP(5, 'studyTask');
+        refreshStudyTasks();
+        return `I added “${taskText}” to your Study Quest checklist. You can check it off when it is finished.`;
+      }
+      return `“${taskText}” is already on your Study Quest checklist.`;
+    }
+    if (/\b(?:check\s*off|complete|finish|mark)\b/i.test(text) && /\b(?:task|to[- ]?do|checklist|project|assignment)\b/i.test(text)) {
+      const state = studyGet();
+      const words = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter((word) => word.length > 3 && !['check','complete','finish','mark','task','todo','checklist','project','assignment','done'].includes(word));
+      const task = state.tasks.find((item) => !item.done && words.some((word) => item.text.toLowerCase().includes(word)));
+      if (!task) return 'I could not find a matching unfinished task. Tell me the task’s exact wording and I can check it off.';
+      studyCompleteTask(task.id);
+      refreshStudyTasks();
+      return `I checked off “${task.text}” in your Study Quest checklist and added the completion reward.`;
+    }
+    return '';
+  }
 
   const chat = document.createElement('div');
   chat.className = 'coach-chat-history';
@@ -142,7 +174,7 @@
     const latest = conversation.filter((message) => message.role === 'student').slice(-1)[0]?.content || '';
     const echoPattern = latest ? new RegExp(`^${String(latest).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s.!?:-]*`, 'i') : null;
     const cleaned = String(answer || '').replace(/^You mentioned:\s*/i, '').replace(echoPattern || /$^/, '').replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s*I[’']m focusing on the specific details you gave me instead of asking you to choose a topic\.?\s*/gi, ' ').replace(/\s+Student:\s+[^\n]*(?=\n|$)/gi, ' ').replace(/\s{2,}/g, ' ').trim();
-    if (!cleaned) return 'I’m focusing on the specific details in your message and will respond to those directly.';
+    if (!cleaned) return 'OpenAI did not return a complete reply. Please try sending that message again.';
     if (/^You mentioned:[\s\S]*$/i.test(cleaned) && !/\n\n/.test(cleaned)) return `${cleaned}\n\nI’m focusing on the specific details you gave me instead of asking you to choose a topic.`;
     return cleaned;
   }
@@ -170,6 +202,12 @@
       const urgentReply = urgentSafetyReply(safeText, historyText());
       if (urgentReply) {
         addMessage('coach', urgentReply);
+        renderChat();
+        return;
+      }
+      const taskReply = studyTaskCommand(safeText);
+      if (taskReply) {
+        addMessage('coach', taskReply);
         renderChat();
         return;
       }
