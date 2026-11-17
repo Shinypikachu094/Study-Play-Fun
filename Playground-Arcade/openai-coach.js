@@ -32,7 +32,7 @@
   conversation = conversation.filter((message, index, all) => index === 0 || !(message.role === all[index - 1].role && message.content === all[index - 1].content));
   if (cleanedSavedHistory) saveConversation();
   const addMessage = (role, content) => { conversation.push({ role, content: redactPrivate(content), at: Date.now() }); saveConversation(); };
-  const historyText = () => conversation.slice(-16).map((message) => `${message.role === 'student' ? 'Student' : 'Coach'}: ${message.content}`).join('\n');
+  const historyText = () => conversation.slice(-8).map((message) => `${message.role === 'student' ? 'Student' : 'Coach'}: ${message.content}`).join('\n');
 
   if (label) label.textContent = 'Real OpenAI coach';
   if (copy) copy.textContent = 'Ask anything about schoolwork, studying, or brainstorming. Replies stay in chat unless you explicitly ask to make one a study note.';
@@ -139,7 +139,9 @@
     return `${safety}${breathing}\n\n(AI interpretations are not always accurate and cannot replace emergency professionals or a doctor.)`;
   }
   function cleanCoachAnswer(answer) {
-    const cleaned = String(answer || '').replace(/^You mentioned:\s*/i, '').replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s*I[’']m focusing on the specific details you gave me instead of asking you to choose a topic\.?\s*/gi, ' ').replace(/\s+Student:\s+[^\n]*(?=\n|$)/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+    const latest = conversation.filter((message) => message.role === 'student').slice(-1)[0]?.content || '';
+    const echoPattern = latest ? new RegExp(`^${String(latest).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[\\s.!?:-]*`, 'i') : null;
+    const cleaned = String(answer || '').replace(/^You mentioned:\s*/i, '').replace(echoPattern || /$^/, '').replace(/\s*What part of that topic would you like to explore first\??\s*/gi, ' ').replace(/\s*I[’']m focusing on the specific details you gave me instead of asking you to choose a topic\.?\s*/gi, ' ').replace(/\s+Student:\s+[^\n]*(?=\n|$)/gi, ' ').replace(/\s{2,}/g, ' ').trim();
     if (!cleaned) return 'I’m focusing on the specific details in your message and will respond to those directly.';
     if (/^You mentioned:[\s\S]*$/i.test(cleaned) && !/\n\n/.test(cleaned)) return `${cleaned}\n\nI’m focusing on the specific details you gave me instead of asking you to choose a topic.`;
     return cleaned;
