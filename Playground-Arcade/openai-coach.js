@@ -59,17 +59,19 @@
   const goalsCard = document.createElement('section');
   goalsCard.className = 'card today-goals';
   goalsCard.style.cssText = 'margin:0 0 18px;padding:20px 22px;background:linear-gradient(135deg,#eef0ff,#e7fff5);';
-  goalsCard.innerHTML = '<div class="eyebrow">Today’s study plan</div><h2 style="margin:4px 0 7px">Get goals for today</h2><p class="small" style="margin:0 0 12px">Type a subject and the AI will suggest three realistic goals for today.</p><div style="display:flex;gap:9px;flex-wrap:wrap"><input class="input" id="today-subject" maxlength="80" placeholder="Subject, like biology or algebra" style="flex:1;min-width:220px"><button class="button" id="generate-goals" type="button">Generate goals</button></div><div id="today-goals-list" style="margin-top:14px"></div><p class="small" id="today-goals-status" aria-live="polite" style="margin:10px 0 0"></p>';
+  goalsCard.innerHTML = '<div class="eyebrow">Today’s study plan</div><h2 style="margin:4px 0 7px">Get goals for today</h2><p class="small" style="margin:0 0 12px">Type a subject and describe what you want to focus on. The AI will suggest three realistic goals for today.</p><div style="display:flex;gap:9px;flex-wrap:wrap"><input class="input" id="today-subject" maxlength="80" placeholder="Subject, like biology or algebra" style="flex:1;min-width:220px"><button class="button" id="generate-goals" type="button">Generate goals</button></div><textarea class="input" id="today-description" maxlength="500" rows="3" placeholder="Add details, like: I have a quiz tomorrow and need help with quadratic equations." style="width:100%;box-sizing:border-box;margin-top:9px;resize:vertical"></textarea><div id="today-goals-list" style="margin-top:14px"></div><p class="small" id="today-goals-status" aria-live="polite" style="margin:10px 0 0"></p>';
   if (layout && layout.parentNode) layout.parentNode.insertBefore(goalsCard, layout);
   const goalsKey = 'studyQuestTodayGoalsV1';
-  let todayGoals = { date: '', subject: '', goals: [] };
+  let todayGoals = { date: '', subject: '', description: '', goals: [] };
   try { todayGoals = { ...todayGoals, ...(JSON.parse(localStorage.getItem(goalsKey) || '{}')) }; } catch {}
   const subjectInput = goalsCard.querySelector('#today-subject');
   const goalsList = goalsCard.querySelector('#today-goals-list');
   const goalsStatus = goalsCard.querySelector('#today-goals-status');
   const today = new Date().toISOString().slice(0, 10);
-  if (todayGoals.date !== today) todayGoals = { date: today, subject: '', goals: [] };
+  if (todayGoals.date !== today) todayGoals = { date: today, subject: '', description: '', goals: [] };
   subjectInput.value = todayGoals.subject;
+  const descriptionInput = goalsCard.querySelector('#today-description');
+  descriptionInput.value = todayGoals.description || '';
   function renderTodayGoals() {
     goalsList.innerHTML = '';
     if (!todayGoals.goals.length) return;
@@ -107,17 +109,19 @@
   async function generateGoals(isDifferent = false) {
     const subject = subjectInput.value.trim();
     if (!subject) { goalsStatus.textContent = 'Type a subject first.'; return; }
+    const description = descriptionInput.value.trim();
     const button = goalsCard.querySelector('#generate-goals');
     button.disabled = true;
     goalsStatus.textContent = isDifferent ? 'The AI is creating a fresh set of goals…' : 'The AI is creating today’s goals…';
     try {
+      const focus = description ? ` The student's extra details and focus are: ${description}` : '';
       const avoid = isDifferent && todayGoals.goals.length ? ` Do not repeat or closely copy these earlier goals: ${todayGoals.goals.join(' | ')}.` : '';
-      const response = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: `Create exactly three realistic study goals for today about ${subject}. Each goal should be short, specific, doable in one study session, and start on its own line with a number. Do not give a long explanation.${avoid}` }) });
+      const response = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: `Create exactly three realistic study goals for today about ${subject}.${focus} Each goal should be short, specific, doable in one study session, and start on its own line with a number. Use the student's details to pinpoint the goals. Do not give a long explanation.${avoid}` }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'The AI could not create goals.');
       const goals = String(data.answer || '').split(/\n+/).map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim()).filter(Boolean).slice(0, 3);
       if (!goals.length) throw new Error('The AI returned no study goals.');
-      todayGoals = { date: today, subject, goals };
+      todayGoals = { date: today, subject, description, goals };
       localStorage.setItem(goalsKey, JSON.stringify(todayGoals));
       renderTodayGoals();
       goalsStatus.textContent = `Goals saved for ${subject} today.`;
