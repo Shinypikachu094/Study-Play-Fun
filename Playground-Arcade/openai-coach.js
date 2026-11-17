@@ -29,12 +29,19 @@
     }
     return cleaned ? { ...message, content: cleaned } : { ...message, content: 'I’m focusing on the specific details you gave me instead of asking you to choose a topic.' };
   }).filter(Boolean);
+  conversation = conversation.filter((message, index, all) => index === 0 || !(message.role === all[index - 1].role && message.content === all[index - 1].content));
   if (cleanedSavedHistory) saveConversation();
   const addMessage = (role, content) => { conversation.push({ role, content: redactPrivate(content), at: Date.now() }); saveConversation(); };
   const historyText = () => conversation.slice(-16).map((message) => `${message.role === 'student' ? 'Student' : 'Coach'}: ${message.content}`).join('\n');
 
   if (label) label.textContent = 'Real OpenAI coach';
   if (copy) copy.textContent = 'Ask anything about schoolwork, studying, or brainstorming. Replies stay in chat unless you explicitly ask to make one a study note.';
+  const resetChat = document.createElement('button');
+  resetChat.type = 'button';
+  resetChat.textContent = 'Start fresh chat';
+  resetChat.style.cssText = 'border:0;background:none;color:#5b65f4;font:800 13px system-ui;cursor:pointer;padding:4px 0;margin:0 0 4px;text-decoration:underline;';
+  resetChat.onclick = () => { conversation = []; saveConversation(); renderChat(); prompt.focus(); };
+  panel.insertBefore(resetChat, panel.querySelector('.ai-actions') || prompt);
   const actions = notesButton.closest('.ai-actions');
   if (actions) actions.style.display = 'none';
   reply.style.display = 'none';
