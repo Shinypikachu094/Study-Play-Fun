@@ -95,16 +95,24 @@
       addButton.textContent = 'Added to checklist ✓';
     };
     goalsList.appendChild(addButton);
+    const differentButton = document.createElement('button');
+    differentButton.className = 'button';
+    differentButton.type = 'button';
+    differentButton.style.cssText = 'margin:12px 0 0 8px;background:#fff;border:1px solid #6d70ff;color:#4d55c9;';
+    differentButton.textContent = 'Generate different goals';
+    differentButton.onclick = () => generateGoals(true);
+    goalsList.appendChild(differentButton);
   }
   renderTodayGoals();
-  goalsCard.querySelector('#generate-goals').onclick = async () => {
+  async function generateGoals(isDifferent = false) {
     const subject = subjectInput.value.trim();
     if (!subject) { goalsStatus.textContent = 'Type a subject first.'; return; }
     const button = goalsCard.querySelector('#generate-goals');
     button.disabled = true;
-    goalsStatus.textContent = 'The AI is creating today’s goals…';
+    goalsStatus.textContent = isDifferent ? 'The AI is creating a fresh set of goals…' : 'The AI is creating today’s goals…';
     try {
-      const response = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: `Create exactly three realistic study goals for today about ${subject}. Each goal should be short, specific, doable in one study session, and start on its own line with a number. Do not give a long explanation.` }) });
+      const avoid = isDifferent && todayGoals.goals.length ? ` Do not repeat or closely copy these earlier goals: ${todayGoals.goals.join(' | ')}.` : '';
+      const response = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: `Create exactly three realistic study goals for today about ${subject}. Each goal should be short, specific, doable in one study session, and start on its own line with a number. Do not give a long explanation.${avoid}` }) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'The AI could not create goals.');
       const goals = String(data.answer || '').split(/\n+/).map((line) => line.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').trim()).filter(Boolean).slice(0, 3);
@@ -117,7 +125,8 @@
       renderProgress();
     } catch (error) { goalsStatus.textContent = error.message || 'The AI could not create goals.'; }
     finally { button.disabled = false; }
-  };
+  }
+  goalsCard.querySelector('#generate-goals').onclick = () => generateGoals(false);
   const levelNames = ['Getting started', 'Curious learner', 'Study builder', 'Focused scholar', 'Knowledge champion'];
   function renderProgress() {
     if (typeof arcadeState !== 'function') return;
