@@ -121,13 +121,16 @@
     arcadeAddXP(15, 'coachNote');
     renderProgress();
   }
-  function urgentSafetyReply(text) {
+  function urgentSafetyReply(text, context = '') {
+    const emergencyContext = `${context}\n${text}`;
     const breathingEmergency = /(severe\s+chest\s+pain|chest\s+pain[\s\S]{0,50}(trouble|difficulty|problem)\s+breath|trouble\s+breath|difficulty\s+breath|can't\s+breath|cannot\s+breath|shortness\s+of\s+breath)/i.test(text);
     const dangerEmergency = /(hostage|kidnap|kidnapped|abduct|abduction|taken\s+against\s+(?:my|their)\s+will|arms?\s+and\s+legs?\s+(?:are|were)?\s*(?:all\s+)?broken|both\s+arms?\s+broken|both\s+legs?\s+broken)/i.test(text);
     const lifeThreat = /about\s+to\s+die|going\s+to\s+die|i(?:'m|\s+am)\s+dying|kill\s+myself|hurt\s+myself|suicid/i.test(text);
-    const generalEmergency = /help[\s\S]{0,35}(?:call\s*911|emergency)|(?:call\s*911|emergency)[\s\S]{0,35}help|need\s+emergency\s+help|can't\s+call\s*911/i.test(text);
+    const generalEmergency = /help[\s\S]{0,35}(?:call\s*911|emergency)|(?:call\s*911|emergency)[\s\S]{0,35}help|need\s+emergency\s+help|can't\s+call\s*911/i.test(emergencyContext);
+    const noPhoneFollowUp = /(?:don['’]?t|do not|no|without)\s+(?:have\s+)?a?\s*phone|no\s+phone|phone\s+(?:is\s+)?dead/i.test(text) && generalEmergency;
     if (!breathingEmergency && !dangerEmergency && !lifeThreat && !generalEmergency) return '';
     if (lifeThreat && !dangerEmergency && !breathingEmergency) return 'Call 911 (or your local emergency number) now if you are in immediate danger, and tell a trusted adult right away. If you might hurt yourself, move away from anything you could use to hurt yourself and stay with another person. In the U.S. or Canada, call or text 988 for immediate crisis support; elsewhere, contact your local crisis line. (AI interpretations are not always accurate and cannot replace emergency professionals.)';
+    if (noPhoneFollowUp) return 'If you do not have a phone, ask a nearby adult, teacher, staff member, neighbor, security worker, or open business to call 911 for you. If you are in immediate danger, move toward a safer place or other people if you can do so safely, and clearly say that you need emergency help. (AI answers are not always accurate and cannot replace emergency professionals.)';
     if (generalEmergency && !dangerEmergency && !breathingEmergency) return 'Call 911 (or your local emergency number) now if there is immediate danger. If it is safe, move to a safer place, tell the dispatcher your location and what happened, ask a trusted adult to stay with you, and follow the dispatcher’s instructions without hanging up. (AI answers are not always accurate and cannot replace emergency professionals.)';
     const safety = /hostage|kidnap|abduct|taken\s+against/i.test(text)
       ? 'Call 911 (or your local emergency number) now if you can do so safely, and tell a trusted adult or emergency dispatcher exactly where you are. Do not confront the person holding you or make a risky move to reach a phone. Stay as calm and quiet as you can, follow immediate safety instructions, and share your location or send a quiet alert only if it is safe.'
@@ -162,7 +165,7 @@
     chat.scrollTop = chat.scrollHeight;
     prompt.disabled = true;
     try {
-      const urgentReply = urgentSafetyReply(safeText);
+      const urgentReply = urgentSafetyReply(safeText, historyText());
       if (urgentReply) {
         addMessage('coach', urgentReply);
         renderChat();
