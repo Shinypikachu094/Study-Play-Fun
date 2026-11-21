@@ -51,6 +51,68 @@
     panel.style.position = 'static';
     panel.style.marginTop = '18px';
   }
+  function improveBrainstormEditor() {
+    if (typeof brain === 'undefined' || typeof saveBrain !== 'function') return;
+    const ideaTitle = document.getElementById('idea-title');
+    const ideaTextInput = document.getElementById('idea-text');
+    const addIdeaButton = document.getElementById('add-idea');
+    if (!ideaTitle || !ideaTextInput || !addIdeaButton) return;
+    const draftKey = 'brainstormDraftV1';
+    let ideaText = ideaTextInput;
+    if (ideaTextInput.tagName !== 'TEXTAREA') {
+      ideaText = document.createElement('textarea');
+      ideaText.id = ideaTextInput.id;
+      ideaText.className = ideaTextInput.className;
+      ideaText.placeholder = ideaTextInput.placeholder;
+      ideaText.rows = 3;
+      ideaText.value = ideaTextInput.value;
+      ideaText.style.cssText = 'min-height:78px;resize:vertical;';
+      ideaTextInput.replaceWith(ideaText);
+    }
+    const tools = addIdeaButton.parentElement;
+    if (tools && !tools.querySelector('.brain-draft-help')) {
+      const help = document.createElement('p');
+      help.className = 'small brain-draft-help';
+      help.textContent = 'Your draft saves automatically while you type. Press Ctrl+Enter to add the sticky note.';
+      help.style.cssText = 'grid-column:1/-1;margin:0;';
+      tools.appendChild(help);
+    }
+    try {
+      const draft = JSON.parse(localStorage.getItem(draftKey) || '{}');
+      if (!ideaTitle.value && typeof draft.title === 'string') ideaTitle.value = draft.title;
+      if (!ideaText.value && typeof draft.text === 'string') ideaText.value = draft.text;
+    } catch {}
+    const saveDraft = () => localStorage.setItem(draftKey, JSON.stringify({ title: ideaTitle.value, text: ideaText.value }));
+    ideaTitle.addEventListener('input', saveDraft);
+    ideaText.addEventListener('input', saveDraft);
+    ideaText.addEventListener('keydown', (event) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+        event.preventDefault();
+        addIdeaButton.click();
+      }
+    });
+    addIdeaButton.addEventListener('click', () => {
+      if (!ideaText.value.trim()) return;
+      localStorage.removeItem(draftKey);
+      setTimeout(() => { ideaTitle.value = ''; ideaText.value = ''; }, 0);
+    }, true);
+    const editTitle = document.getElementById('edit-title');
+    const editText = document.getElementById('edit-text');
+    const editTag = document.getElementById('edit-tag');
+    const autoSaveEdit = () => {
+      if (typeof editingId === 'undefined' || editingId === null) return;
+      const note = brain.notes.find((item) => item.id === editingId);
+      if (!note) return;
+      note.title = editTitle.value.trim() || 'Untitled idea';
+      note.text = editText.value;
+      note.tag = editTag.value || 'Ideas';
+      note.updated = Date.now();
+      saveBrain();
+    };
+    [editTitle, editText, editTag].filter(Boolean).forEach((field) => field.addEventListener('input', autoSaveEdit));
+    [editTitle, editText, editTag].filter(Boolean).forEach((field) => field.addEventListener('change', autoSaveEdit));
+  }
+  improveBrainstormEditor();
   const progressCard = document.createElement('section');
   progressCard.className = 'card study-progress';
   progressCard.style.cssText = 'margin:0 0 18px;padding:18px 22px;background:linear-gradient(135deg,#fff8d8,#eef0ff);';
