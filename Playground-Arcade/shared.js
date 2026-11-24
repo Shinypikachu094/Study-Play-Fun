@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded',()=>{if(document.querySelector('.ar
 
 const PLAY_TIME_KEY='studyQuestPlayTimeV1';
 const PLAY_TIME_CAP=30*60;
-function playTimeGet(){try{const s=JSON.parse(localStorage.getItem(PLAY_TIME_KEY))||{};return {playSeconds:Math.min(PLAY_TIME_CAP,Math.max(0,Number(s.playSeconds)||0)),studySeconds:Math.max(0,Number(s.studySeconds)||0)}}catch{return {playSeconds:0,studySeconds:0}}}
+function playTimeGet(){try{const s=JSON.parse(localStorage.getItem(PLAY_TIME_KEY))||{};return {playSeconds:Math.min(PLAY_TIME_CAP,Math.max(0,Number(s.playSeconds)||0)),studySeconds:Math.max(0,Number(s.studySeconds)||0),sessionSeconds:Math.max(0,Number(s.sessionSeconds)||0)}}catch{return {playSeconds:0,studySeconds:0,sessionSeconds:0}}}
 function playTimeSave(s){localStorage.setItem(PLAY_TIME_KEY,JSON.stringify(s));return s}
 document.addEventListener('DOMContentLoaded',()=>{
   const onStudy=location.pathname.toLowerCase().endsWith('/study.html')||document.querySelector('.brainstorm');
@@ -53,8 +53,8 @@ document.addEventListener('DOMContentLoaded',()=>{
       const number=document.querySelector('#study-time-number');
       const status=document.querySelector('#study-time-status');
       const button=document.querySelector('#study-time-toggle');
-      if(number)number.textContent=formatTime(time.studySeconds);
-      if(status)status.textContent=time.playSeconds>=PLAY_TIME_CAP?'Play time is full at 30:00. Use some before earning more.':`${formatTime(time.playSeconds)} of 30:00 play time available.`;
+      if(number)number.textContent=formatTime(time.sessionSeconds);
+      if(status)status.innerHTML=`Total study time: <b>${formatTime(time.studySeconds)}</b><br>${time.playSeconds>=PLAY_TIME_CAP?'Play time is full at 30:00. Use some before earning more.':`${formatTime(time.playSeconds)} of 30:00 play time available.`}`;
       if(button)button.textContent=running?'Pause studying':'Start studying';
     }else{
       const hud=document.querySelector('.play-time-hud');
@@ -69,6 +69,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       const available=PLAY_TIME_CAP-time.playSeconds;
       const earned=Math.min(elapsed,Math.max(0,available));
       time.studySeconds+=elapsed;
+      time.sessionSeconds+=elapsed;
       time.playSeconds+=earned;
       if(time.playSeconds>=PLAY_TIME_CAP)running=false;
     }else{
@@ -86,8 +87,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   if(onStudy){
     const hero=document.querySelector('.hero');
     if(hero){
-      const card=document.createElement('section');card.className='study-time-card';card.innerHTML='<div class="eyebrow">Study-to-play timer</div><h2>Earn game time by studying</h2><p class="small">Study for one second to earn one second of game time. Game time can never be more than 30 minutes.</p><div class="study-time-number" id="study-time-number">0:00</div><p class="small" id="study-time-status"></p><div class="study-time-actions"><button class="button" id="study-time-toggle" type="button">Start studying</button><a class="button gold" href="index (1).html">Play games →</a></div></div>';hero.after(card);
+      const card=document.createElement('section');card.className='study-time-card';card.innerHTML='<div class="eyebrow">Study-to-play timer</div><h2>Earn game time by studying</h2><p class="small">Study for one second to earn one second of game time. Game time can never be more than 30 minutes.</p><div class="study-time-number" id="study-time-number">0:00</div><p class="small">Current study session</p><p class="small" id="study-time-status"></p><div class="study-time-actions"><button class="button" id="study-time-toggle" type="button">Start studying</button><button class="button" id="study-time-reset" type="button">Reset session</button><a class="button gold" href="index (1).html">Play games →</a></div></div>';hero.after(card);
       document.querySelector('#study-time-toggle').onclick=()=>{running=!running;last=Date.now();render()};
+      document.querySelector('#study-time-reset').onclick=()=>{time.sessionSeconds=0;playTimeSave(time);last=Date.now();render()};
     }
   }else{
     const hud=document.createElement('div');hud.className='play-time-hud';document.body.appendChild(hud);if(!running)showLock();
