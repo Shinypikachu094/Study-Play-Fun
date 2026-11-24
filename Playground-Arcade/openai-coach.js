@@ -372,7 +372,12 @@
         const problem = data.error || 'The Coach could not answer.';
         throw new Error(problem);
       }
-      const coachAnswer = cleanCoachAnswer(data.answer);
+      let coachAnswer = cleanCoachAnswer(data.answer);
+      if (coachAnswer === 'OpenAI did not return a complete reply. Please try sending that message again.') {
+        const retryResponse = await fetch('/api/coach', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: `${request}\n\nReturn a complete, personalized answer to the latest student message. Do not repeat the student’s words and do not return an empty response.` }) });
+        const retryData = await retryResponse.json();
+        if (retryResponse.ok && retryData.answer) coachAnswer = cleanCoachAnswer(retryData.answer);
+      }
       addMessage('coach', coachAnswer);
       renderChat();
       if (asksForNote && typeof brain !== 'undefined') {
