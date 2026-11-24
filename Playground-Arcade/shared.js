@@ -37,3 +37,61 @@ function studyCompleteTask(id){const s=studyGet(),task=s.tasks.find(t=>t.id===id
 
 document.addEventListener('DOMContentLoaded',()=>{if(document.querySelector('.arcade-xp-hud'))return;const hud=document.createElement('div');hud.className='arcade-xp-hud';hud.style.cssText='position:fixed;top:12px;right:12px;z-index:9999;width:min(280px,calc(100vw - 24px));padding:9px 13px;border:1px solid #ffffff55;border-radius:16px;background:#111827dd;color:#fff;font:800 13px system-ui,sans-serif;box-shadow:0 6px 18px #0002;backdrop-filter:blur(7px)';hud.innerHTML='<div class="arcade-xp-label"></div><div class="arcade-xp-track"><i class="arcade-xp-fill"></i></div><div class="arcade-xp-next"></div>';const style=document.createElement('style');style.textContent='.arcade-xp-track{height:8px;margin-top:6px;border-radius:99px;background:#ffffff33;overflow:hidden}.arcade-xp-fill{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#ffd85e,#ff6fa8,#6ce5ff);transition:width .25s}.arcade-xp-next{margin-top:4px;color:#dbe4ff;font-size:11px;font-weight:700}';document.head.appendChild(style);function render(){const s=arcadeState(),into=s.xp%100;hud.querySelector('.arcade-xp-label').textContent=`⭐ Level ${s.level} · ${s.xp} XP · ${s.points} points`;hud.querySelector('.arcade-xp-fill').style.width=`${into}%`;hud.querySelector('.arcade-xp-next').textContent=`${into}/100 XP to Level ${s.level+1}`}document.body.appendChild(hud);render();setInterval(render,500)});
 
+const PLAY_TIME_KEY='studyQuestPlayTimeV1';
+const PLAY_TIME_CAP=30*60;
+function playTimeGet(){try{const s=JSON.parse(localStorage.getItem(PLAY_TIME_KEY))||{};return {playSeconds:Math.min(PLAY_TIME_CAP,Math.max(0,Number(s.playSeconds)||0)),studySeconds:Math.max(0,Number(s.studySeconds)||0)}}catch{return {playSeconds:0,studySeconds:0}}}
+function playTimeSave(s){localStorage.setItem(PLAY_TIME_KEY,JSON.stringify(s));return s}
+document.addEventListener('DOMContentLoaded',()=>{
+  const onStudy=location.pathname.toLowerCase().endsWith('/study.html')||document.querySelector('.brainstorm');
+  const formatTime=(seconds)=>`${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,'0')}`;
+  const style=document.createElement('style');
+  style.textContent='.study-time-card{margin:0 0 22px;padding:18px 22px;border:1px solid #dfe3f4;border-radius:22px;background:linear-gradient(135deg,#fff8d8,#e7fff5);box-shadow:0 16px 45px #3f4e9b1a;color:#182044}.study-time-card h2{margin:4px 0 7px}.study-time-card .study-time-number{font-size:34px;font-weight:950;letter-spacing:-.06em}.study-time-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.play-time-hud{position:fixed;left:12px;bottom:12px;z-index:9999;padding:10px 14px;border-radius:16px;background:#111827eF;color:#fff;font:800 13px system-ui,sans-serif;box-shadow:0 6px 18px #0003}.play-time-lock{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:24px;background:#111827cc;color:#fff;font-family:system-ui,sans-serif;text-align:center}.play-time-lock>div{max-width:430px;padding:28px;border-radius:24px;background:#26305f;box-shadow:0 18px 55px #0005}.play-time-lock h2{margin-top:0}.play-time-lock p{line-height:1.5;color:#e4e9ff}';
+  document.head.appendChild(style);
+  let time=playTimeGet(),last=Date.now(),running=Boolean(!onStudy&&time.playSeconds>0),locked=false;
+  const render=()=>{
+    if(onStudy){
+      const number=document.querySelector('#study-time-number');
+      const status=document.querySelector('#study-time-status');
+      const button=document.querySelector('#study-time-toggle');
+      if(number)number.textContent=formatTime(time.studySeconds);
+      if(status)status.textContent=time.playSeconds>=PLAY_TIME_CAP?'Play time is full at 30:00. Use some before earning more.':`${formatTime(time.playSeconds)} of 30:00 play time available.`;
+      if(button)button.textContent=running?'Pause studying':'Start studying';
+    }else{
+      const hud=document.querySelector('.play-time-hud');
+      if(hud)hud.textContent=`🎮 Play time left: ${formatTime(time.playSeconds)}`;
+    }
+  };
+  const tick=()=>{
+    const now=Date.now(),elapsed=Math.min(10,Math.floor((now-last)/1000));
+    if(elapsed<1){return} last=now;
+    if(document.hidden||!running){render();return}
+    if(onStudy){
+      const available=PLAY_TIME_CAP-time.playSeconds;
+      const earned=Math.min(elapsed,Math.max(0,available));
+      time.studySeconds+=elapsed;
+      time.playSeconds+=earned;
+      if(time.playSeconds>=PLAY_TIME_CAP)running=false;
+    }else{
+      time.playSeconds=Math.max(0,time.playSeconds-elapsed);
+      if(time.playSeconds===0){running=false;showLock();}
+    }
+    playTimeSave(time);render();
+  };
+  const showLock=()=>{
+    if(locked||onStudy)return;
+    locked=true;
+    const lock=document.createElement('div');lock.className='play-time-lock';lock.innerHTML='<div><h2>Study time is needed</h2><p>Your 30-minute play limit is used up. Return to Study Quest and spend study time to earn more play time.</p><a class="button gold" href="study.html">Go to Study Quest</a></div>';
+    document.body.appendChild(lock);
+  };
+  if(onStudy){
+    const hero=document.querySelector('.hero');
+    if(hero){
+      const card=document.createElement('section');card.className='study-time-card';card.innerHTML='<div class="eyebrow">Study-to-play timer</div><h2>Earn game time by studying</h2><p class="small">Study for one second to earn one second of game time. Game time can never be more than 30 minutes.</p><div class="study-time-number" id="study-time-number">0:00</div><p class="small" id="study-time-status"></p><div class="study-time-actions"><button class="button" id="study-time-toggle" type="button">Start studying</button><a class="button gold" href="index (1).html">Play games →</a></div></div>';hero.after(card);
+      document.querySelector('#study-time-toggle').onclick=()=>{running=!running;last=Date.now();render()};
+    }
+  }else{
+    const hud=document.createElement('div');hud.className='play-time-hud';document.body.appendChild(hud);if(!running)showLock();
+  }
+  render();setInterval(tick,1000);document.addEventListener('visibilitychange',()=>{last=Date.now();render()});
+});
+
