@@ -48,6 +48,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   style.textContent='.study-time-card{margin:0 0 22px;padding:18px 22px;border:1px solid #dfe3f4;border-radius:22px;background:linear-gradient(135deg,#fff8d8,#e7fff5);box-shadow:0 16px 45px #3f4e9b1a;color:#182044}.study-time-card h2{margin:4px 0 7px}.study-time-card .study-time-number{font-size:34px;font-weight:950;letter-spacing:-.06em}.study-time-actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}.play-time-hud{position:fixed;left:12px;bottom:12px;z-index:9999;padding:10px 14px;border-radius:16px;background:#111827eF;color:#fff;font:800 13px system-ui,sans-serif;box-shadow:0 6px 18px #0003}.play-time-lock{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:24px;background:#111827cc;color:#fff;font-family:system-ui,sans-serif;text-align:center}.play-time-lock>div{max-width:430px;padding:28px;border-radius:24px;background:#26305f;box-shadow:0 18px 55px #0005}.play-time-lock h2{margin-top:0}.play-time-lock p{line-height:1.5;color:#e4e9ff}';
   document.head.appendChild(style);
   let time=playTimeGet(),last=Date.now(),running=Boolean(!onStudy&&time.playSeconds>0),locked=false;
+  const startingPlaySeconds=time.playSeconds;
   const render=()=>{
     if(onStudy){
       const number=document.querySelector('#study-time-number');
@@ -81,7 +82,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   const showLock=()=>{
     if(locked||onStudy)return;
     locked=true;
-    const lock=document.createElement('div');lock.className='play-time-lock';lock.innerHTML='<div><h2>Study time is needed</h2><p>Your 30-minute play limit is used up. Return to Study Quest and spend study time to earn more play time.</p><a class="button gold" href="study.html">Go to Study Quest</a></div>';
+    const lock=document.createElement('div');lock.className='play-time-lock';lock.innerHTML=`<div><h2>Study time is needed</h2><p>You started this game with <b>${formatTime(startingPlaySeconds)}</b> of play time. Your play time has now run out. Return to Study Quest and spend study time to earn more.</p><a class="button gold" href="study.html">Go to Study Quest</a></div>`;
     document.body.appendChild(lock);
   };
   if(onStudy){
